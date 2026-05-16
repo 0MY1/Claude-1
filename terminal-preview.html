@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Terminal Dashboard Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 24px;
+  }
+  .terminal {
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 8px;
+    width: 680px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
+    overflow: hidden;
+  }
+  .titlebar {
+    background: #2b2b2b;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #3a3a3a;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.red   { background: #ff5f56; }
+  .dot.yellow{ background: #ffbd2e; }
+  .dot.green { background: #27c93f; }
+  .titlebar span {
+    flex: 1;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    letter-spacing: .5px;
+  }
+  pre {
+    padding: 18px 20px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #ccc;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* colour classes */
+  .cyan   { color: #2dd4bf; }
+  .yellow { color: #facc15; }
+  .green  { color: #4ade80; }
+  .red    { color: #f87171; }
+  .dim    { color: #6b7280; }
+  .bold   { font-weight: bold; }
+  .white  { color: #f3f4f6; }
+
+  /* section rule */
+  .rule { color: #facc15; }
+
+  /* status badges */
+  .badge-paper { color: #facc15; }
+  .badge-live  { color: #f87171; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="titlebar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <span>node terminal.js</span>
+  </div>
+  <pre><span class="cyan">╔══════════════════════════════════════════════╗
+║    </span><span class="bold white">CLAUDE TRADING BOT  —  TERMINAL DASHBOARD</span><span class="cyan">  ║
+╚══════════════════════════════════════════════╝</span>
+  Strategy : <span class="bold white">VWAP + RSI(3) + EMA(8) Scalp</span>   Mode : <span class="badge-paper">PAPER</span>
+  Symbol   : BTC/USDT   Timeframe : 1m   Exchange : BITGET
+  Updated  : 8:51:51 AM   Refresh every 30s   <span class="dim">[r] refresh  [q] quit</span>
+
+<span class="rule">  ── MARKET SNAPSHOT ────────────────────────────</span>
+  Close price  <span class="bold white">$64,969.90</span>
+  VWAP         $65,017.88
+  EMA(8)       $65,003.13
+  RSI(3)       34.82
+  EMA slope    <span class="green">▲ positive</span>
+
+<span class="rule">  ── SAFETY CHECK ─────────────────────────────</span>
+  <span class="red">❌</span>  Price must be above VWAP (bullish bias)
+<span class="dim">       → Got: 64969.9031  |  Needed: &gt; vwap (65017.8773)</span>
+  <span class="green">✅</span>  RSI(3) must be above 20 (recovering from oversold)
+  <span class="green">✅</span>  RSI(3) must be below 80 (don't chase overbought)
+  <span class="red">❌</span>  Price must be above EMA(8) (short-term trend up)
+<span class="dim">       → Got: 64969.9031  |  Needed: &gt; ema_8 (65003.1319)</span>
+  <span class="green">✅</span>  EMA(8) must be rising (slope &gt; 0)
+
+  <span class="red">✗  BLOCKED — 2 conditions not met</span>
+
+<span class="rule">  ── RECENT TRADES  (today: 2/3) ──────────────</span>
+  <span class="yellow">[P]</span> <span class="dim">2025-05-16 08:49:11</span>  <span class="green">buy </span>  BTC/USDT  0.000770 @ $64,891.00
+  <span class="yellow">[P]</span> <span class="dim">2025-05-16 07:22:04</span>  <span class="green">buy </span>  BTC/USDT  0.000769 @ $65,023.00
+
+</pre>
+</div>
+</body>
+</html>
