@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node bot.js",
     "onboard": "node onboard.js",
-    "tax-summary": "node bot.js --tax-summary"
+    "tax-summary": "node bot.js --tax-summary",
+    "terminal": "node terminal.js"
   },
   "dependencies": {
     "ccxt": "^4.3.0",
