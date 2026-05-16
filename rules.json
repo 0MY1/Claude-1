@@ -1,0 +1,91 @@
+{
+  "strategy_name": "VWAP + RSI(3) + EMA(8) Scalp",
+  "description": "1-minute scalping strategy using VWAP, fast RSI, and EMA for short-term momentum trades",
+  "timeframe": "1m",
+  "symbol": "BTC/USDT",
+
+  "entry_rules": {
+    "logic": "ALL",
+    "conditions": [
+      {
+        "id": "price_above_vwap",
+        "description": "Price must be above VWAP (bullish bias)",
+        "indicator": "close",
+        "operator": ">",
+        "compare_to": "vwap",
+        "required": true
+      },
+      {
+        "id": "rsi_oversold_recovery",
+        "description": "RSI(3) must be above 20 (recovering from oversold — momentum turning up)",
+        "indicator": "rsi_3",
+        "operator": ">",
+        "value": 20,
+        "required": true
+      },
+      {
+        "id": "rsi_not_overbought",
+        "description": "RSI(3) must be below 80 (don't chase overbought)",
+        "indicator": "rsi_3",
+        "operator": "<",
+        "value": 80,
+        "required": true
+      },
+      {
+        "id": "price_above_ema8",
+        "description": "Price must be above EMA(8) (short-term trend up)",
+        "indicator": "close",
+        "operator": ">",
+        "compare_to": "ema_8",
+        "required": true
+      },
+      {
+        "id": "ema_slope_positive",
+        "description": "EMA(8) must be rising (slope > 0)",
+        "indicator": "ema_8_slope",
+        "operator": ">",
+        "value": 0,
+        "required": true
+      }
+    ]
+  },
+
+  "exit_rules": {
+    "logic": "ANY",
+    "conditions": [
+      {
+        "id": "rsi_overbought",
+        "description": "RSI(3) crosses above 80 — take profit",
+        "indicator": "rsi_3",
+        "operator": ">",
+        "value": 80
+      },
+      {
+        "id": "price_below_ema8",
+        "description": "Price closes below EMA(8) — momentum lost",
+        "indicator": "close",
+        "operator": "<",
+        "compare_to": "ema_8"
+      },
+      {
+        "id": "price_below_vwap",
+        "description": "Price falls below VWAP — bias flipped bearish",
+        "indicator": "close",
+        "operator": "<",
+        "compare_to": "vwap"
+      }
+    ]
+  },
+
+  "risk_rules": {
+    "stop_loss_pct": 1.5,
+    "take_profit_pct": 2.5,
+    "max_position_size_pct": 5,
+    "trailing_stop": false
+  },
+
+  "filters": {
+    "min_volume_usd_24h": 10000000,
+    "avoid_news_windows": false
+  }
+}

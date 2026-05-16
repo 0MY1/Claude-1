@@ -1,0 +1,8 @@
+node_modules/
+.env
+trades.csv
+safety-check-log.json
+transcripts-raw.txt
+*.log
+.DS_Store
+Thumbs.db
