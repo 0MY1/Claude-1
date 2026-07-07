@@ -6,3 +6,6 @@ transcripts-raw.txt
 *.log
 .DS_Store
 Thumbs.db
+__pycache__/
+*.pyc
+solana-fomo-bot/venv/

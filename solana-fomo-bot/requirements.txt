@@ -1,0 +1,5 @@
+flask>=3.0
+python-dotenv>=1.0
+requests>=2.31
+solders>=0.20
+solana>=0.34
