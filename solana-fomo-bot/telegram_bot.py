@@ -4,6 +4,7 @@ Helius webhook needs to be exposed publicly — Telegram approvals work anywhere
 import threading
 import time
 import uuid
+from collections import deque
 
 import requests
 
@@ -15,6 +16,35 @@ _API_BASE = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}"
 _pending = {}  # request_id -> {**convergence, "created_at": float}
 _pending_lock = threading.Lock()
 _update_offset = 0
+
+_trade_history = deque(maxlen=50)  # newest last
+_history_lock = threading.Lock()
+
+
+def get_pending():
+    """Snapshot of currently pending approval requests, for the dashboard."""
+    with _pending_lock:
+        return [{"request_id": request_id, **data} for request_id, data in _pending.items()]
+
+
+def get_trade_history():
+    """Last 50 resolved approvals (newest first), for the dashboard."""
+    with _history_lock:
+        return list(reversed(_trade_history))
+
+
+def _record_trade(token_mint, decision, amount_sol=None, result=None):
+    with _history_lock:
+        _trade_history.append(
+            {
+                "timestamp": time.time(),
+                "token_mint": token_mint,
+                "decision": decision,
+                "paper_trading": config.PAPER_TRADING,
+                "amount_sol": amount_sol,
+                "result": result,
+            }
+        )
 
 
 def send_convergence_alert(convergence):
@@ -104,6 +134,7 @@ def _handle_callback(callback_query):
 
     if time.time() - pending["created_at"] > config.APPROVAL_TTL_SECONDS:
         _edit_message(chat_id, message_id, "⏱ Approval expired — signal is stale, skipping.")
+        _record_trade(pending["token_mint"], "expired")
         return
 
     if action == "approve":
@@ -111,10 +142,17 @@ def _handle_callback(callback_query):
         try:
             result = jupiter.execute_buy(pending["token_mint"])
             _edit_message(chat_id, message_id, f"✅ {result}")
+            _record_trade(
+                pending["token_mint"], "approved", amount_sol=config.BUY_AMOUNT_SOL, result=result
+            )
         except Exception as exc:
             _edit_message(chat_id, message_id, f"❌ Buy failed: {exc}")
+            _record_trade(
+                pending["token_mint"], "failed", amount_sol=config.BUY_AMOUNT_SOL, result=str(exc)
+            )
     else:
         _edit_message(chat_id, message_id, f"Skipped <code>{pending['token_mint']}</code>.")
+        _record_trade(pending["token_mint"], "skipped")
 
 
 def _answer_callback(callback_query_id):

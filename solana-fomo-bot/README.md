@@ -97,22 +97,46 @@ a webhook:
 
 Once created, any tracked wallet's swap will POST to your bot in real time.
 
+### 6. Dashboard
+
+Visit `/dashboard` (e.g. `http://localhost:5000/dashboard`, or your tunnel URL +
+`/dashboard`) for a live view of bot status, tracked wallets, recent convergence
+events (including sub-threshold ones, last 20), pending Telegram approvals, and
+trade history. The page auto-refreshes every 10 seconds (plain `<meta refresh>`,
+no JS).
+
+It's protected with HTTP Basic Auth (any username, password = `DASHBOARD_PASSWORD`)
+since the tunnel URL is public. **If `DASHBOARD_PASSWORD` is unset, the route
+returns 503 instead of serving unprotected** — set it in `.env` to enable:
+
+```
+DASHBOARD_PASSWORD=<pick something>
+TRACKED_WALLETS=wallet1,wallet2,wallet3   # optional, display-only
+```
+
+`TRACKED_WALLETS` is purely for display — it doesn't filter anything (that's
+controlled by the Helius webhook's own `accountAddresses`), it just tells the
+dashboard which wallets to show as "tracked."
+
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Flask entrypoint — wires webhook → convergence → Telegram together |
+| `app.py` | Flask entrypoint — wires webhook → convergence → Telegram together, serves `/dashboard` |
 | `config.py` | Loads and validates env vars from the repo-root `.env` |
 | `webhook.py` | Parses Helius payloads into normalized buy events |
-| `convergence.py` | Sliding-window convergence detector |
-| `telegram_bot.py` | Sends approval alerts, long-polls for button presses |
+| `convergence.py` | Sliding-window convergence detector, keeps a log of recent buy attempts |
+| `telegram_bot.py` | Sends approval alerts, long-polls for button presses, tracks trade history |
 | `jupiter.py` | Price lookups and swap execution via Jupiter's Swap API |
+| `dashboard.py` | Renders the `/dashboard` HTML page |
 
 ## Notes
 
-- Convergence detection is in-memory — restarting the process clears the sliding
-  window state (but not open Telegram approval requests, which also live in
-  memory and will simply no longer resolve after a restart).
+- Convergence detection, the dashboard's recent-events log, pending approvals, and
+  trade history are all in-memory — restarting the process clears them (and any
+  open Telegram approval requests will no longer resolve after a restart).
+  Restarting is also the only way to pick up `.env` changes, since `config.py`
+  only reads it once at startup.
 - USD value is estimated from the input side of the swap (SOL or stablecoin spent),
   priced via Jupiter's Price API — it's an estimate, not the exact fill price.
 - Approvals expire after `APPROVAL_TTL_SECONDS` (default 10 min) so a stale signal

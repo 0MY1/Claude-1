@@ -45,3 +45,11 @@ MIN_BUY_USD = float(os.environ.get("MIN_BUY_USD", "150"))
 CONVERGENCE_WINDOW_SECONDS = int(os.environ.get("CONVERGENCE_WINDOW_SECONDS", str(8 * 60)))
 MIN_CONVERGENCE_WALLETS = int(os.environ.get("MIN_CONVERGENCE_WALLETS", "3"))
 APPROVAL_TTL_SECONDS = int(os.environ.get("APPROVAL_TTL_SECONDS", str(10 * 60)))
+
+# Display-only list for the /dashboard — doesn't affect what Helius forwards (that's
+# controlled by the webhook's own accountAddresses config), just what's shown as "tracked".
+TRACKED_WALLETS = [w.strip() for w in os.environ.get("TRACKED_WALLETS", "").split(",") if w.strip()]
+
+# Required to access /dashboard (HTTP Basic Auth, any username). Unset disables the
+# dashboard entirely rather than serving it unprotected — the tunnel URL is public.
+DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD")
