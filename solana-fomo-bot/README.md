@@ -1,8 +1,8 @@
 # Solana FOMO Bot
 
 Watches Solana swaps via a Helius webhook, flags a token when 3+ distinct wallets
-buy it (≥$150 each) within an 8-minute rolling window, and asks for approval on
-Telegram before buying via Jupiter.
+buy it (≥$150 each, by default) within an 8-minute rolling window, and asks for
+approval on Telegram before buying via Jupiter.
 
 ## How it works
 
@@ -10,7 +10,8 @@ Telegram before buying via Jupiter.
 2. `webhook.py` parses each transaction into a normalized buy: wallet, token mint,
    estimated USD value (via SOL/token price from Jupiter's Price API).
 3. `convergence.py` keeps a sliding window per token. Once 3+ distinct wallets have
-   each bought ≥$150 of the same token within 8 minutes, it flags a convergence.
+   each bought at least `MIN_BUY_USD` of the same token within 8 minutes, it flags
+   a convergence.
 4. `telegram_bot.py` sends you a message with **✅ Buy** / **❌ Skip** buttons.
 5. If you tap Buy, `jupiter.py` gets a quote and submits the swap on-chain.
 
@@ -40,7 +41,9 @@ TELEGRAM_CHAT_ID=...
 ```
 
 See `.env.example` in this directory for the full list of optional settings
-(position size, slippage, thresholds, etc). To go live, add:
+(position size, slippage, thresholds, etc). Notably, `MIN_BUY_USD` sets the
+minimum per-wallet buy size (in USD) that counts toward convergence — it
+defaults to `150` if unset. To go live, add:
 
 ```
 SOLANA_PRIVATE_KEY=<base58 secret key of the wallet that will execute swaps>
