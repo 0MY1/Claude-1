@@ -50,6 +50,10 @@ APPROVAL_TTL_SECONDS = int(os.environ.get("APPROVAL_TTL_SECONDS", str(10 * 60)))
 # controlled by the webhook's own accountAddresses config), just what's shown as "tracked".
 TRACKED_WALLETS = [w.strip() for w in os.environ.get("TRACKED_WALLETS", "").split(",") if w.strip()]
 
+# Only needed by tunnel_supervisor.py, to auto-update the webhook's URL when the
+# Cloudflare quick tunnel restarts under a new hostname.
+HELIUS_WEBHOOK_ID = os.environ.get("HELIUS_WEBHOOK_ID")
+
 # Required to access /dashboard (HTTP Basic Auth, any username). Unset disables the
 # dashboard entirely rather than serving it unprotected — the tunnel URL is public.
 DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD")

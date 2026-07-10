@@ -80,9 +80,24 @@ This prints a public URL like `https://random-words.trycloudflare.com`. Your
 webhook endpoint is that URL + `/webhook`, e.g.
 `https://random-words.trycloudflare.com/webhook`.
 
-(A quick tunnel's URL changes every time you restart it. For a stable URL, create
-a named tunnel with a Cloudflare account and a domain — see `cloudflared tunnel
-login` / `cloudflared tunnel create` in Cloudflare's docs.)
+**A quick tunnel's URL changes every time it restarts, and free quick tunnels have
+no uptime guarantee** — they've been observed to silently die (stuck retrying a
+broken connection) while `cloudflared` itself keeps running. Two ways to deal
+with that:
+
+- **Named tunnel (stable hostname)** — requires a domain you control added as a
+  zone in your Cloudflare account. If you have one, run `cloudflared tunnel
+  login`, then `cloudflared tunnel create <name>`, then `cloudflared tunnel
+  route dns <name> <hostname>`, and run `cloudflared tunnel run <name>` instead
+  of the quick-tunnel command above. See Cloudflare's docs for the full flow.
+- **No domain? Use `tunnel_supervisor.py`** — runs the quick tunnel for you,
+  detects when it dies (process exit or failed health checks), restarts it, and
+  automatically re-points the Helius webhook at the new URL via Helius's API.
+  Set `HELIUS_WEBHOOK_ID` in `.env` (see step 5) and run:
+  ```bash
+  python tunnel_supervisor.py
+  ```
+  instead of `cloudflared tunnel --url ...` directly.
 
 ### 5. Create the Helius webhook
 
@@ -95,7 +110,9 @@ a webhook:
   smart-money / insider wallets)
 - **Webhook type**: Enhanced
 
-Once created, any tracked wallet's swap will POST to your bot in real time.
+Once created, any tracked wallet's swap will POST to your bot in real time. Note
+the returned `webhookID` and put it in `.env` as `HELIUS_WEBHOOK_ID` if you're
+using `tunnel_supervisor.py`.
 
 ### 6. Dashboard
 
@@ -129,6 +146,7 @@ dashboard which wallets to show as "tracked."
 | `telegram_bot.py` | Sends approval alerts, long-polls for button presses, tracks trade history |
 | `jupiter.py` | Price lookups and swap execution via Jupiter's Swap API |
 | `dashboard.py` | Renders the `/dashboard` HTML page |
+| `tunnel_supervisor.py` | Keeps a Cloudflare quick tunnel alive and the Helius webhook pointed at it |
 
 ## Notes
 
