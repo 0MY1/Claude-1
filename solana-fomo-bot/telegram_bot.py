@@ -52,7 +52,7 @@ def send_convergence_alert(convergence):
     the request_id."""
     request_id = uuid.uuid4().hex[:12]
     with _pending_lock:
-        _pending[request_id] = {**convergence, "created_at": time.time()}
+        _pending[request_id] = {**convergence, "created_at": time.time(), "message_id": None}
 
     keyboard = {
         "inline_keyboard": [
@@ -73,6 +73,12 @@ def send_convergence_alert(convergence):
         timeout=10,
     )
     resp.raise_for_status()
+
+    message_id = resp.json()["result"]["message_id"]
+    with _pending_lock:
+        if request_id in _pending:
+            _pending[request_id]["message_id"] = message_id
+
     return request_id
 
 
@@ -115,6 +121,33 @@ def _poll_loop():
         except requests.RequestException as exc:
             print(f"[telegram] poll error: {exc}")
             time.sleep(5)
+        finally:
+            # Must run even if the poll itself failed — otherwise a Telegram outage
+            # (no way to tap a button) would also mean nothing ever expires.
+            _sweep_expired_pending()
+
+
+def _sweep_expired_pending():
+    """Runs once per poll cycle (~every 30s). Without this, an approval nobody taps
+    would sit in `_pending` forever — expiry is otherwise only checked reactively,
+    inside _handle_callback, when a tap actually arrives."""
+    now = time.time()
+    with _pending_lock:
+        expired = [
+            (request_id, pending)
+            for request_id, pending in _pending.items()
+            if now - pending["created_at"] > config.APPROVAL_TTL_SECONDS
+        ]
+        for request_id, _ in expired:
+            del _pending[request_id]
+
+    for _, pending in expired:
+        message_id = pending.get("message_id")
+        if message_id:
+            _edit_message(
+                config.TELEGRAM_CHAT_ID, message_id, "⏱ Approval expired — signal is stale, skipping."
+            )
+        _record_trade(pending["token_mint"], "expired")
 
 
 def _handle_callback(callback_query):
